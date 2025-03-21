@@ -280,7 +280,6 @@ fun DispositivoItem(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono
             Box(
                 modifier = Modifier
                     .size(40.dp)
