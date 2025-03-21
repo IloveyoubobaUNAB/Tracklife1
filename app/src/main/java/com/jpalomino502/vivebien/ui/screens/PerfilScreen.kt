@@ -263,7 +263,6 @@ fun DispositivosTabContent() {
         }
     }
 }
-
 @Composable
 fun DispositivoItem(
     nombre: String,
