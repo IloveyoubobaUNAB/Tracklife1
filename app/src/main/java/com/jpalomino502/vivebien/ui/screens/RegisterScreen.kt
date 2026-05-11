@@ -1,6 +1,5 @@
 package com.jpalomino502.vivebien.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,26 +9,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.jpalomino502.vivebien.feature.auth.ui.LoginViewModel
+import com.jpalomino502.vivebien.feature.auth.ui.RegisterViewModel
 import com.jpalomino502.vivebien.navigation.Screen
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     navController: NavController,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: RegisterViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.loginSuccess) {
-        if (uiState.loginSuccess) {
+    LaunchedEffect(uiState.registerSuccess) {
+        if (uiState.registerSuccess) {
             navController.navigate(Screen.Main.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -44,7 +43,7 @@ fun LoginScreen(
         TopWave(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(180.dp)
         )
 
         Box(
@@ -62,6 +61,12 @@ fun LoginScreen(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4CAF50)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Crea tu cuenta",
+                    fontSize = 16.sp,
+                    color = Color.Gray
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -84,15 +89,31 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     shape = RoundedCornerShape(8.dp)
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = uiState.confirmPassword,
+                    onValueChange = viewModel::onConfirmPasswordChanged,
+                    label = { Text("Confirmar contraseña") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    shape = RoundedCornerShape(8.dp)
+                )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (uiState.errorMessage.isNotEmpty()) {
-                    Text(text = uiState.errorMessage, color = Color.Red, fontSize = 14.sp)
+                    Text(
+                        text = uiState.errorMessage,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Button(
-                    onClick = viewModel::onLoginClicked,
+                    onClick = viewModel::onRegisterClicked,
                     enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
@@ -108,40 +129,25 @@ fun LoginScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Iniciar Sesión", fontSize = 16.sp)
+                        Text("Crear cuenta", fontSize = 16.sp)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row {
-                    Text(text = "¿No tienes cuenta? ", fontSize = 14.sp, color = Color.Gray)
+                    Text(text = "¿Ya tienes cuenta? ", fontSize = 14.sp, color = Color.Gray)
                     Text(
-                        text = "Regístrate",
+                        text = "Iniciar sesión",
                         fontSize = 14.sp,
                         color = Color(0xFF4CAF50),
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.clickable {
-                            navController.navigate(Screen.Register.route)
+                            navController.popBackStack()
                         }
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TopWave(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val width = size.width
-        val height = size.height
-        val path = Path().apply {
-            moveTo(0f, 0f)
-            cubicTo(width * 0.25f, height * 0.8f, width * 0.75f, height * 0.2f, width, height)
-            lineTo(width, 0f)
-            close()
-        }
-        drawPath(path, color = Color(0xFF4CAF50))
     }
 }

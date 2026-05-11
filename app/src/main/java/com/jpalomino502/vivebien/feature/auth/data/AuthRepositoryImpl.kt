@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
@@ -19,18 +20,43 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
     private val isLoggedInKey = booleanPreferencesKey("is_logged_in")
+    private val registeredUserKey = stringPreferencesKey("registered_user")
+    private val registeredPassKey = stringPreferencesKey("registered_pass")
 
     override suspend fun login(username: String, password: String): Result<Unit> {
-        return if (username == DEMO_USER && password == DEMO_PASSWORD) {
-            context.authDataStore.edit { prefs -> prefs[isLoggedInKey] = true }
+        val prefs = context.authDataStore.data.first()
+        val savedUser = prefs[registeredUserKey]
+        val savedPass = prefs[registeredPassKey]
+
+        val valid = if (savedUser != null && savedPass != null) {
+            username == savedUser && password == savedPass
+        } else {
+            username == DEMO_USER && password == DEMO_PASSWORD
+        }
+
+        return if (valid) {
+            context.authDataStore.edit { it[isLoggedInKey] = true }
             Result.success(Unit)
         } else {
             Result.failure(IllegalArgumentException("Credenciales incorrectas"))
         }
     }
 
+    override suspend fun register(username: String, password: String): Result<Unit> {
+        val prefs = context.authDataStore.data.first()
+        if (prefs[registeredUserKey] == username) {
+            return Result.failure(IllegalArgumentException("El usuario ya existe"))
+        }
+        context.authDataStore.edit {
+            it[registeredUserKey] = username
+            it[registeredPassKey] = password
+            it[isLoggedInKey] = true
+        }
+        return Result.success(Unit)
+    }
+
     override suspend fun logout() {
-        context.authDataStore.edit { prefs -> prefs[isLoggedInKey] = false }
+        context.authDataStore.edit { it[isLoggedInKey] = false }
     }
 
     override suspend fun isLoggedIn(): Boolean {

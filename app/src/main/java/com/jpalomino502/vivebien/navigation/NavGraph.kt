@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jpalomino502.vivebien.ui.screens.LoginScreen
 import com.jpalomino502.vivebien.ui.screens.MainScreen
+import com.jpalomino502.vivebien.ui.screens.RegisterScreen
 
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
@@ -16,6 +17,9 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
     ) {
         composable(route = Screen.Login.route) {
             LoginScreen(navController = navController)
+        }
+        composable(route = Screen.Register.route) {
+            RegisterScreen(navController = navController)
         }
         composable(route = Screen.Main.route) {
             MainScreen()
