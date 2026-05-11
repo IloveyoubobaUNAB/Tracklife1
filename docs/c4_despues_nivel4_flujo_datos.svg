@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="820" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="840" height="820" fill="#F8F9FA" rx="8"/>
+
+  <!-- Title -->
+  <rect x="10" y="10" width="820" height="46" fill="#2C3E50" rx="6"/>
+  <text x="420" y="40" font-size="16" font-weight="bold" fill="white" text-anchor="middle">C4 — Nivel 4: Flujo de Datos · Nueva Medición de Presión Arterial</text>
+
+  <!-- Step 1: User -->
+  <rect x="290" y="76" width="260" height="60" fill="#3498DB" rx="8" stroke="#2980B9" stroke-width="2"/>
+  <text x="420" y="102" font-size="13" font-weight="bold" fill="white" text-anchor="middle">👤 USUARIO</text>
+  <text x="420" y="122" font-size="10" fill="#D6EAF8" text-anchor="middle">Toca "+ Nueva medición de presión"</text>
+
+  <!-- Arrow 1 -->
+  <line x1="420" y1="136" x2="420" y2="158" stroke="#555" stroke-width="2"/>
+  <polygon points="414,156 426,156 420,168" fill="#555"/>
+  <text x="540" y="152" font-size="9" fill="#555">showBpDialog = true</text>
+
+  <!-- Step 2: Screen -->
+  <rect x="230" y="168" width="380" height="68" fill="#EBF5FB" rx="8" stroke="#2980B9" stroke-width="2"/>
+  <text x="420" y="192" font-size="12" font-weight="bold" fill="#1A5276" text-anchor="middle">SaludScreen</text>
+  <text x="420" y="208" font-size="10" fill="#555" text-anchor="middle">[Composable — Presentation Layer]</text>
+  <text x="420" y="222" font-size="9" fill="#888" text-anchor="middle">Usuario ingresa: sistólica=120, diastólica=80 → toca "Guardar"</text>
+
+  <!-- Arrow 2 -->
+  <line x1="420" y1="236" x2="420" y2="258" stroke="#2980B9" stroke-width="2"/>
+  <polygon points="414,256 426,256 420,268" fill="#2980B9"/>
+  <text x="450" y="252" font-size="9" fill="#2980B9">onAddBloodPressure(120, 80)</text>
+
+  <!-- Step 3: ViewModel -->
+  <rect x="230" y="268" width="380" height="68" fill="#D6EAF8" rx="8" stroke="#2980B9" stroke-width="2"/>
+  <text x="420" y="292" font-size="12" font-weight="bold" fill="#1A5276" text-anchor="middle">HealthViewModel</text>
+  <text x="420" y="308" font-size="10" fill="#555" text-anchor="middle">[@HiltViewModel — Presentation Layer]</text>
+  <text x="420" y="324" font-size="9" fill="#888" text-anchor="middle">Delega al caso de uso · No contiene lógica de negocio</text>
+
+  <!-- Arrow 3 -->
+  <line x1="420" y1="336" x2="420" y2="358" stroke="#27AE60" stroke-width="2"/>
+  <polygon points="414,356 426,356 420,368" fill="#27AE60"/>
+  <text x="450" y="352" font-size="9" fill="#27AE60">addBloodPressure(120, 80)</text>
+
+  <!-- Step 4: UseCase -->
+  <rect x="200" y="368" width="440" height="96" fill="#D5F5E3" rx="8" stroke="#27AE60" stroke-width="2"/>
+  <text x="420" y="392" font-size="12" font-weight="bold" fill="#1D6A3E" text-anchor="middle">AddVitalSignUseCase</text>
+  <text x="420" y="408" font-size="10" fill="#555" text-anchor="middle">[Domain Layer — Reglas de negocio]</text>
+  <text x="250" y="428" font-size="10" fill="#27AE60">✓  Valida: 60 ≤ 120 ≤ 300 (sistólica)</text>
+  <text x="250" y="444" font-size="10" fill="#27AE60">✓  Valida: 40 ≤ 80 ≤ 200 (diastólica)</text>
+  <text x="250" y="458" font-size="10" fill="#27AE60">✓  Valida: diastólica (80) &lt; sistólica (120)</text>
+
+  <!-- Arrow 4 -->
+  <line x1="420" y1="464" x2="420" y2="486" stroke="#E67E22" stroke-width="2"/>
+  <polygon points="414,484 426,484 420,496" fill="#E67E22"/>
+  <text x="450" y="480" font-size="9" fill="#E67E22">addVitalSign(BLOOD_PRESSURE_SYSTOLIC, 120f)</text>
+  <text x="450" y="492" font-size="9" fill="#E67E22">addVitalSign(BLOOD_PRESSURE_DIASTOLIC, 80f)</text>
+
+  <!-- Step 5: Repository -->
+  <rect x="230" y="496" width="380" height="68" fill="#FDEBD0" rx="8" stroke="#E67E22" stroke-width="2"/>
+  <text x="420" y="520" font-size="12" font-weight="bold" fill="#7D6608" text-anchor="middle">HealthRepositoryImpl</text>
+  <text x="420" y="536" font-size="10" fill="#555" text-anchor="middle">[Data Layer]</text>
+  <text x="420" y="552" font-size="9" fill="#888" text-anchor="middle">Convierte a VitalSignEntity → delega al DAO</text>
+
+  <!-- Arrow 5 -->
+  <line x1="420" y1="564" x2="420" y2="586" stroke="#E74C3C" stroke-width="2"/>
+  <polygon points="414,584 426,584 420,596" fill="#E74C3C"/>
+  <text x="450" y="580" font-size="9" fill="#E74C3C">insert(VitalSignEntity(...))</text>
+
+  <!-- Step 6: DAO + Room -->
+  <rect x="230" y="596" width="380" height="68" fill="#FDEDEC" rx="8" stroke="#E74C3C" stroke-width="2"/>
+  <text x="420" y="620" font-size="12" font-weight="bold" fill="#C0392B" text-anchor="middle">VitalSignDao + Room Database</text>
+  <text x="420" y="636" font-size="10" fill="#555" text-anchor="middle">[Capa de Persistencia]</text>
+  <text x="420" y="652" font-size="9" fill="#888" text-anchor="middle">INSERT en tabla vital_signs · Room emite cambio por Flow</text>
+
+  <!-- Reactive return arrow (right side) -->
+  <line x1="620" y1="630" x2="720" y2="630" stroke="#8E44AD" stroke-width="2"/>
+  <line x1="720" y1="630" x2="720" y2="310" stroke="#8E44AD" stroke-width="2" stroke-dasharray="8,4"/>
+  <line x1="720" y1="310" x2="620" y2="310" stroke="#8E44AD" stroke-width="2"/>
+  <polygon points="618,304 630,310 618,316" fill="#8E44AD"/>
+  <text x="730" y="478" font-size="10" fill="#8E44AD" transform="rotate(90, 730, 478)">Flow reativo (StateFlow)</text>
+
+  <!-- Arrow back to ViewModel -->
+  <line x1="420" y1="664" x2="420" y2="700" stroke="#8E44AD" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <line x1="210" y1="700" x2="420" y2="700" stroke="#8E44AD" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <line x1="210" y1="700" x2="210" y2="310" stroke="#8E44AD" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <line x1="210" y1="310" x2="228" y2="310" stroke="#8E44AD" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+  <!-- Result box -->
+  <rect x="200" y="712" width="440" height="76" fill="#F4ECF7" rx="8" stroke="#8E44AD" stroke-width="2"/>
+  <text x="420" y="735" font-size="12" font-weight="bold" fill="#6C3483" text-anchor="middle">Resultado — UI se recompone automáticamente</text>
+  <text x="420" y="752" font-size="10" fill="#555" text-anchor="middle">GetBloodPressureUseCase emite BloodPressureData(120, 80, "Normal", hasData=true)</text>
+  <text x="420" y="768" font-size="10" fill="#555" text-anchor="middle">HealthViewModel._uiState.value = .copy(bloodPressure = ...)</text>
+  <text x="420" y="784" font-size="10" fill="#27AE60" text-anchor="middle" font-weight="bold">SaludScreen muestra "120/80 · Normal" sin acción del usuario</text>
+</svg>

@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="720" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="980" height="720" fill="#F8F9FA" rx="8"/>
+
+  <!-- Title -->
+  <rect x="10" y="10" width="960" height="46" fill="#2C3E50" rx="6"/>
+  <text x="490" y="40" font-size="16" font-weight="bold" fill="white" text-anchor="middle">C4 — Nivel 3: Componentes por Feature · DESPUÉS</text>
+
+  <!-- Feature Activity (left) -->
+  <rect x="20" y="80" width="295" height="580" fill="#EBF5FB" rx="8" stroke="#2980B9" stroke-width="2"/>
+  <text x="167" y="106" font-size="13" font-weight="bold" fill="#1A5276" text-anchor="middle">Feature: Activity</text>
+
+  <!-- Presentation -->
+  <rect x="34" y="118" width="267" height="120" fill="#D6EAF8" rx="6" stroke="#5DADE2" stroke-width="1.5"/>
+  <text x="167" y="138" font-size="11" font-weight="bold" fill="#1A5276" text-anchor="middle">PRESENTATION</text>
+  <text x="167" y="155" font-size="10" fill="#333" text-anchor="middle">ActividadScreen.kt</text>
+  <text x="167" y="170" font-size="9" fill="#666" text-anchor="middle">· collectAsStateWithLifecycle()</text>
+  <text x="167" y="183" font-size="9" fill="#666" text-anchor="middle">· AddActividadDialog</text>
+  <text x="167" y="196" font-size="9" fill="#666" text-anchor="middle">· ActividadItem clickeable (toggle)</text>
+  <rect x="44" y="204" width="247" height="28" fill="#AED6F1" rx="4"/>
+  <text x="167" y="222" font-size="10" font-weight="bold" fill="#1A5276" text-anchor="middle">ActivityViewModel (@HiltViewModel)</text>
+
+  <!-- Arrow down -->
+  <line x1="167" y1="238" x2="167" y2="256" stroke="#2980B9" stroke-width="1.5"/>
+  <polygon points="161,254 173,254 167,266" fill="#2980B9"/>
+
+  <!-- Domain -->
+  <rect x="34" y="266" width="267" height="140" fill="#D5F5E3" rx="6" stroke="#27AE60" stroke-width="1.5"/>
+  <text x="167" y="286" font-size="11" font-weight="bold" fill="#1D6A3E" text-anchor="middle">DOMAIN</text>
+  <rect x="44" y="296" width="247" height="22" fill="#A9DFBF" rx="3"/>
+  <text x="167" y="311" font-size="9" fill="#1D6A3E" text-anchor="middle">GetTodayActivitiesUseCase → Flow&lt;List&lt;ActivityRecord&gt;&gt;</text>
+  <rect x="44" y="322" width="247" height="22" fill="#A9DFBF" rx="3"/>
+  <text x="167" y="337" font-size="9" fill="#1D6A3E" text-anchor="middle">GetDailyStatsUseCase → Flow&lt;DailyStats&gt;</text>
+  <rect x="44" y="348" width="247" height="22" fill="#A9DFBF" rx="3"/>
+  <text x="167" y="363" font-size="9" fill="#1D6A3E" text-anchor="middle">AddActivityUseCase → validación + persist</text>
+  <rect x="44" y="374" width="247" height="22" fill="#A9DFBF" rx="3"/>
+  <text x="167" y="389" font-size="9" fill="#1D6A3E" text-anchor="middle">ToggleActivityUseCase / DeleteActivityUseCase</text>
+
+  <!-- Arrow down -->
+  <line x1="167" y1="406" x2="167" y2="424" stroke="#27AE60" stroke-width="1.5"/>
+  <polygon points="161,422 173,422 167,434" fill="#27AE60"/>
+
+  <!-- Data -->
+  <rect x="34" y="434" width="267" height="200" fill="#FDEBD0" rx="6" stroke="#E67E22" stroke-width="1.5"/>
+  <text x="167" y="454" font-size="11" font-weight="bold" fill="#7D6608" text-anchor="middle">DATA</text>
+  <rect x="44" y="464" width="247" height="22" fill="#FAD7A0" rx="3"/>
+  <text x="167" y="479" font-size="9" fill="#7D6608" text-anchor="middle">ActivityRepository (interfaz)</text>
+  <rect x="44" y="490" width="247" height="22" fill="#FAD7A0" rx="3"/>
+  <text x="167" y="505" font-size="9" fill="#7D6608" text-anchor="middle">ActivityRepositoryImpl (@Singleton)</text>
+  <text x="167" y="524" font-size="9" fill="#888" text-anchor="middle">todayRange() · getDailyStats()</text>
+  <text x="167" y="539" font-size="9" fill="#888" text-anchor="middle">steps = distKm × 1300</text>
+  <rect x="44" y="548" width="247" height="22" fill="#FAD7A0" rx="3"/>
+  <text x="167" y="563" font-size="9" fill="#7D6608" text-anchor="middle">ActivityDao: getByDateRange(start, end): Flow&lt;...&gt;</text>
+  <rect x="44" y="574" width="247" height="22" fill="#FAD7A0" rx="3"/>
+  <text x="167" y="589" font-size="9" fill="#7D6608" text-anchor="middle">ActivityEntity + toDomain() / toEntity()</text>
+  <text x="167" y="612" font-size="9" fill="#888" text-anchor="middle">id · title · durationMinutes · distanceKm</text>
+  <text x="167" y="626" font-size="9" fill="#888" text-anchor="middle">scheduledTime · completed · date</text>
+
+  <!-- Feature Health (center) -->
+  <rect x="342" y="80" width="295" height="580" fill="#EAF7EF" rx="8" stroke="#27AE60" stroke-width="2"/>
+  <text x="489" y="106" font-size="13" font-weight="bold" fill="#1D6A3E" text-anchor="middle">Feature: Health</text>
+
+  <rect x="356" y="118" width="267" height="120" fill="#D5F5E3" rx="6" stroke="#52BE80" stroke-width="1.5"/>
+  <text x="489" y="138" font-size="11" font-weight="bold" fill="#1D6A3E" text-anchor="middle">PRESENTATION</text>
+  <text x="489" y="155" font-size="10" fill="#333" text-anchor="middle">SaludScreen.kt</text>
+  <text x="489" y="170" font-size="9" fill="#666" text-anchor="middle">· SignosVitalesContent (hasData state)</text>
+  <text x="489" y="183" font-size="9" fill="#666" text-anchor="middle">· MedicacionContent + dialogs</text>
+  <text x="489" y="196" font-size="9" fill="#666" text-anchor="middle">· BP / FC / Medicación dialogs</text>
+  <rect x="366" y="204" width="247" height="28" fill="#A9DFBF" rx="4"/>
+  <text x="489" y="222" font-size="10" font-weight="bold" fill="#1D6A3E" text-anchor="middle">HealthViewModel (@HiltViewModel)</text>
+
+  <line x1="489" y1="238" x2="489" y2="256" stroke="#27AE60" stroke-width="1.5"/>
+  <polygon points="483,254 495,254 489,266" fill="#27AE60"/>
+
+  <rect x="356" y="266" width="267" height="160" fill="#A9DFBF" rx="6" stroke="#27AE60" stroke-width="1.5"/>
+  <text x="489" y="286" font-size="11" font-weight="bold" fill="#1D6A3E" text-anchor="middle">DOMAIN — Use Cases</text>
+  <rect x="366" y="296" width="247" height="18" fill="#D5F5E3" rx="3"/>
+  <text x="489" y="309" font-size="9" fill="#1D6A3E" text-anchor="middle">AddVitalSignUseCase (valida rangos)</text>
+  <rect x="366" y="318" width="247" height="18" fill="#D5F5E3" rx="3"/>
+  <text x="489" y="331" font-size="9" fill="#1D6A3E" text-anchor="middle">GetHeartRateUseCase → HeartRateData</text>
+  <rect x="366" y="340" width="247" height="18" fill="#D5F5E3" rx="3"/>
+  <text x="489" y="353" font-size="9" fill="#1D6A3E" text-anchor="middle">GetBloodPressureUseCase → BPData</text>
+  <rect x="366" y="362" width="247" height="18" fill="#D5F5E3" rx="3"/>
+  <text x="489" y="375" font-size="9" fill="#1D6A3E" text-anchor="middle">GetMedicationsUseCase → Flow&lt;List&lt;Medication&gt;&gt;</text>
+  <rect x="366" y="384" width="247" height="18" fill="#D5F5E3" rx="3"/>
+  <text x="489" y="397" font-size="9" fill="#1D6A3E" text-anchor="middle">AddMedicationUseCase / ToggleMedication</text>
+  <text x="489" y="416" font-size="9" fill="#555" text-anchor="middle">HeartRateData · BloodPressureData (domain models)</text>
+
+  <line x1="489" y1="430" x2="489" y2="448" stroke="#27AE60" stroke-width="1.5"/>
+  <polygon points="483,446 495,446 489,458" fill="#27AE60"/>
+
+  <rect x="356" y="458" width="267" height="176" fill="#FDEBD0" rx="6" stroke="#E67E22" stroke-width="1.5"/>
+  <text x="489" y="478" font-size="11" font-weight="bold" fill="#7D6608" text-anchor="middle">DATA</text>
+  <rect x="366" y="488" width="247" height="18" fill="#FAD7A0" rx="3"/>
+  <text x="489" y="501" font-size="9" fill="#7D6608" text-anchor="middle">HealthRepositoryImpl</text>
+  <rect x="366" y="510" width="247" height="18" fill="#FAD7A0" rx="3"/>
+  <text x="489" y="523" font-size="9" fill="#7D6608" text-anchor="middle">VitalSignDao: getLatestByType(type, limit=1)</text>
+  <rect x="366" y="532" width="247" height="18" fill="#FAD7A0" rx="3"/>
+  <text x="489" y="545" font-size="9" fill="#7D6608" text-anchor="middle">MedicationDao: getAll() → Flow</text>
+  <text x="489" y="564" font-size="9" fill="#888" text-anchor="middle">combine() para presión arterial</text>
+  <text x="489" y="578" font-size="9" fill="#888" text-anchor="middle">VitalSignEntity: type(String), value(Float)</text>
+  <text x="489" y="592" font-size="9" fill="#888" text-anchor="middle">VitalSignType.valueOf(type) en toDomain()</text>
+  <text x="489" y="614" font-size="9" fill="#888" text-anchor="middle">MedicationEntity: name · dose · frequency · active</text>
+
+  <!-- Feature Profile/Auth/Appts (right) -->
+  <rect x="664" y="80" width="295" height="580" fill="#F4ECF7" rx="8" stroke="#8E44AD" stroke-width="2"/>
+  <text x="811" y="106" font-size="13" font-weight="bold" fill="#6C3483" text-anchor="middle">Features: Auth · Appts · Profile · Home</text>
+
+  <!-- Auth -->
+  <rect x="678" y="118" width="267" height="82" fill="#E8DAEF" rx="6" stroke="#9B59B6" stroke-width="1.5"/>
+  <text x="811" y="138" font-size="11" font-weight="bold" fill="#6C3483" text-anchor="middle">Auth Feature</text>
+  <text x="811" y="155" font-size="9" fill="#555" text-anchor="middle">LoginUseCase · RegisterUseCase</text>
+  <text x="811" y="170" font-size="9" fill="#555" text-anchor="middle">AuthRepositoryImpl → DataStore</text>
+  <text x="811" y="185" font-size="9" fill="#555" text-anchor="middle">is_logged_in · display_name · user/pass</text>
+
+  <!-- Appts -->
+  <rect x="678" y="212" width="267" height="96" fill="#E8DAEF" rx="6" stroke="#9B59B6" stroke-width="1.5"/>
+  <text x="811" y="232" font-size="11" font-weight="bold" fill="#6C3483" text-anchor="middle">Appointments Feature</text>
+  <text x="811" y="249" font-size="9" fill="#555" text-anchor="middle">GetAppointmentsUseCase (upcoming/past)</text>
+  <text x="811" y="264" font-size="9" fill="#555" text-anchor="middle">AddAppointmentUseCase · DeleteAppointmentUseCase</text>
+  <text x="811" y="279" font-size="9" fill="#555" text-anchor="middle">AppointmentDao: getAll() → Flow</text>
+  <text x="811" y="294" font-size="9" fill="#555" text-anchor="middle">isPast = dateTimestamp &lt; System.currentTimeMillis()</text>
+
+  <!-- Profile -->
+  <rect x="678" y="320" width="267" height="96" fill="#E8DAEF" rx="6" stroke="#9B59B6" stroke-width="1.5"/>
+  <text x="811" y="340" font-size="11" font-weight="bold" fill="#6C3483" text-anchor="middle">Profile Feature</text>
+  <text x="811" y="357" font-size="9" fill="#555" text-anchor="middle">GetUserProfileUseCase · UpdateProfileUseCase</text>
+  <text x="811" y="372" font-size="9" fill="#555" text-anchor="middle">GetSettingsUseCase · SaveSettingsUseCase · LogoutUseCase</text>
+  <text x="811" y="387" font-size="9" fill="#555" text-anchor="middle">ProfileRepositoryImpl → auth_prefs + profile_prefs</text>
+  <text x="811" y="402" font-size="9" fill="#555" text-anchor="middle">LogoutUseCase → navigate(Login) + popUpTo(0)</text>
+
+  <!-- Home -->
+  <rect x="678" y="428" width="267" height="96" fill="#E8DAEF" rx="6" stroke="#9B59B6" stroke-width="1.5"/>
+  <text x="811" y="448" font-size="11" font-weight="bold" fill="#6C3483" text-anchor="middle">Home Feature (Dashboard)</text>
+  <text x="811" y="465" font-size="9" fill="#555" text-anchor="middle">GetDashboardUseCase</text>
+  <text x="811" y="480" font-size="9" fill="#555" text-anchor="middle">HomeRepositoryImpl → combine()</text>
+  <text x="811" y="495" font-size="9" fill="#555" text-anchor="middle">displayName + nextAppointment + dailyStats</text>
+  <text x="811" y="510" font-size="9" fill="#555" text-anchor="middle">HomeDashboardData: resumen en tiempo real</text>
+
+  <!-- Hilt DI -->
+  <rect x="678" y="536" width="267" height="108" fill="#F4ECF7" rx="6" stroke="#8E44AD" stroke-width="2"/>
+  <text x="811" y="556" font-size="11" font-weight="bold" fill="#6C3483" text-anchor="middle">Hilt DI — Inyección</text>
+  <text x="811" y="573" font-size="9" fill="#555" text-anchor="middle">AppModule (@Binds): bindAuthRepository,</text>
+  <text x="811" y="587" font-size="9" fill="#555" text-anchor="middle">bindActivityRepository, bindHealthRepository,</text>
+  <text x="811" y="601" font-size="9" fill="#555" text-anchor="middle">bindAppointmentsRepository, bindProfileRepository,</text>
+  <text x="811" y="615" font-size="9" fill="#555" text-anchor="middle">bindHomeRepository</text>
+  <text x="811" y="631" font-size="9" fill="#555" text-anchor="middle">DatabaseModule (@Provides): AppDatabase + 4 DAOs</text>
+
+  <!-- Bottom -->
+  <rect x="10" y="678" width="960" height="28" fill="#2C3E50" rx="4"/>
+  <text x="490" y="697" font-size="11" fill="white" text-anchor="middle">Dependencias: Presentation → Domain ← Data · Domain no depende de ninguna capa externa</text>
+</svg>
