@@ -17,7 +17,6 @@ import javax.inject.Inject
 data class AppointmentsUiState(
     val upcomingAppointments: List<Appointment> = emptyList(),
     val pastAppointments: List<Appointment> = emptyList(),
-    val appointmentDays: Set<Int> = emptySet(),
     val isLoading: Boolean = true,
     val showAddDialog: Boolean = false,
     val errorMessage: String = ""
@@ -40,19 +39,9 @@ class AppointmentsViewModel @Inject constructor(
                 getAppointments.past()
             ) { upcoming, past -> upcoming to past }
             .collect { (upcoming, past) ->
-                val days = upcoming.map { appt ->
-                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = appt.dateTimestamp }
-                    val today = java.util.Calendar.getInstance()
-                    if (cal.get(java.util.Calendar.YEAR) == today.get(java.util.Calendar.YEAR) &&
-                        cal.get(java.util.Calendar.MONTH) == today.get(java.util.Calendar.MONTH)) {
-                        cal.get(java.util.Calendar.DAY_OF_MONTH)
-                    } else -1
-                }.filter { it > 0 }.toSet()
-
                 _uiState.value = _uiState.value.copy(
                     upcomingAppointments = upcoming,
                     pastAppointments = past,
-                    appointmentDays = days,
                     isLoading = false
                 )
             }
