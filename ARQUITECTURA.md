@@ -1,6 +1,6 @@
 # Informe de Arquitectura — ViveBien (TrackLife)
-**Repositorio:** https://github.com/MarcozVD/Tracklife  
-**Upstream (original):** https://github.com/IloveyoubobaUNAB/Tracklife  
+**Repositorio:** https://github.com/IloveyoubobaUNAB/Tracklife  
+**Upstream (original):** https://github.com/jpalomino502/Tracklife  
 **Fecha:** Mayo 2026
 
 ---
@@ -69,7 +69,7 @@ app/src/main/java/com/jpalomino502/vivebien/
 
 ## 2. Repositorio — Evidencia del Estado Inicial
 
-**URL fork:** https://github.com/MarcozVD/Tracklife  
+**URL fork:** https://github.com/IloveyoubobaUNAB/Tracklife  
 **Branch:** `main`  
 **Commit inicial (app base):** `345c736` — "Create app vivebien" (21/03/2025)
 
@@ -583,6 +583,135 @@ La aplicación original era un **"Big Ball of Mud"**: toda la lógica, los datos
 | ViewModels | 0 | 7 |
 | Casos de uso | 0 | 20 |
 | Repositorios | 0 | 6 |
+
+---
+
+## 8. Glosario — Significado de Términos Importantes
+
+### Patrones y arquitectura
+
+**MVVM (Model-View-ViewModel)**  
+Patrón de diseño que divide una pantalla en tres partes: el **Model** (datos y lógica de negocio), la **View** (lo que ve el usuario, en este caso los Composables) y el **ViewModel** (intermediario que expone el estado de la pantalla y recibe las acciones del usuario). La ventaja es que la View nunca toca los datos directamente; solo observa el estado que el ViewModel publica.
+
+**Clean Architecture**  
+Forma de organizar el código en capas concéntricas donde las capas internas no conocen las externas. En este proyecto hay tres capas: Presentation (pantallas y ViewModels), Domain (reglas de negocio puras) y Data (base de datos y almacenamiento). La regla central es que el Domain no depende de nadie; todos dependen del Domain.
+
+**Monolito Modular**  
+Aplicación que vive en un único proyecto/APK pero cuyo código está dividido en módulos lógicos independientes por funcionalidad (auth, activity, health, etc.). Es el punto medio entre un monolito tradicional (todo mezclado) y microservicios (proyectos separados). Facilita la organización sin la complejidad de múltiples módulos Gradle.
+
+**Big Ball of Mud**  
+Antipatrón que describe un sistema sin estructura clara donde la lógica, los datos y la presentación conviven mezclados en los mismos archivos. Es el estado inicial del proyecto antes de las mejoras.
+
+**Repository (Patrón Repositorio)**  
+Clase que actúa como intermediaria entre el dominio y la fuente de datos. El ViewModel no sabe si los datos vienen de Room, de una API o de DataStore; solo llama al repositorio. Esto permite cambiar la fuente de datos sin tocar el resto del código.
+
+**Use Case (Caso de Uso)**  
+Clase con una sola responsabilidad que encapsula una acción de negocio específica (por ejemplo, `AddActivityUseCase`). Contiene las validaciones y reglas antes de persistir un dato. Separa "qué puede hacer la app" de "cómo lo guarda" y de "cómo lo muestra".
+
+**Singleton**  
+Patrón que garantiza que solo exista una instancia de una clase en toda la aplicación. En este proyecto, la base de datos Room y todos los repositorios son Singleton: se crean una vez y se reutilizan, evitando conexiones duplicadas a la BD.
+
+**Mapper (Patrón Mapeador)**  
+Función que convierte un objeto de una capa en el equivalente de otra. En este proyecto, `toDomain()` convierte una entidad de Room (capa Data) en un modelo de dominio, y `toEntity()` hace lo inverso. Esto desacopla el modelo de la base de datos del modelo que usa la app internamente.
+
+**Observer (Patrón Observador)**  
+Patrón donde un objeto (el observador) se suscribe a otro (el observable) y recibe actualizaciones automáticas cuando cambia el estado. En este proyecto se implementa con `Flow` y `StateFlow`: la pantalla observa el ViewModel, y el ViewModel observa el repositorio/base de datos.
+
+**Strategy (Patrón Estrategia)**  
+Patrón que define una familia de algoritmos detrás de una interfaz, permitiendo intercambiarlos sin cambiar el código que los usa. Los repositorios son interfaces; se puede cambiar la implementación (por ejemplo, de almacenamiento local a API remota) sin modificar los ViewModels.
+
+**Factory (Patrón Fábrica)**  
+Patrón que delega la creación de objetos a una clase especializada. En este proyecto, Hilt actúa como fábrica de ViewModels: cuando una pantalla solicita un ViewModel con `hiltViewModel()`, Hilt lo crea con todas sus dependencias inyectadas automáticamente.
+
+---
+
+### Tecnologías y herramientas
+
+**Hilt / Dagger**  
+Framework de **inyección de dependencias** para Android. En lugar de que cada clase cree sus propias dependencias (`val repo = ActivityRepositoryImpl()`), Hilt las provee automáticamente. Esto hace el código más testeable y elimina el acoplamiento entre clases.
+
+**Inyección de dependencias (DI)**  
+Técnica donde una clase recibe sus dependencias desde afuera en lugar de crearlas ella misma. Si `ActivityViewModel` necesita `GetTodayActivitiesUseCase`, no lo instancia; Hilt se lo pasa al constructor. Principio: "no llames a tus herramientas, que te las den".
+
+**Room**  
+Librería de Android que actúa como capa de abstracción sobre SQLite. Permite definir tablas como clases Kotlin (`@Entity`), consultas como interfaces (`@Dao`) y la base de datos completa con una sola clase (`@Database`). Devuelve los resultados como `Flow`, actualizando la UI automáticamente cuando cambian los datos.
+
+**DataStore Preferences**  
+Solución moderna de Android para guardar datos clave-valor de forma asíncrona y segura (reemplaza a SharedPreferences). En este proyecto guarda la sesión del usuario (`is_logged_in`, `display_name`) y las preferencias de perfil (notificaciones, modo oscuro).
+
+**StateFlow / Flow**  
+`Flow` es un flujo de datos reactivo de Kotlin: emite valores a lo largo del tiempo (como un río). `StateFlow` es una variante que siempre tiene un valor actual y lo expone a quien lo observe. En este proyecto, Room emite `Flow` cuando cambia la BD, y los ViewModels exponen `StateFlow<UiState>` a las pantallas.
+
+**Kotlin Coroutines**  
+Sistema de Android/Kotlin para ejecutar código asíncrono (operaciones lentas como acceso a BD o red) sin bloquear el hilo principal. Permiten escribir código asíncrono de forma secuencial y legible, sin callbacks anidados.
+
+**Jetpack Compose**  
+Framework moderno de Android para construir interfaces de usuario de forma declarativa con Kotlin. En lugar de definir la UI en XML y manipularla con código, se describen funciones `@Composable` que recomponen automáticamente cuando cambia el estado.
+
+**KSP (Kotlin Symbol Processing)**  
+Procesador de anotaciones para Kotlin, más rápido que el antiguo KAPT. Lo usan Hilt y Room para generar código en tiempo de compilación a partir de anotaciones como `@HiltViewModel`, `@Entity`, `@Dao`.
+
+**@Entity**  
+Anotación de Room que marca una clase Kotlin como una tabla de la base de datos. Cada propiedad de la clase se convierte en una columna. Ejemplo: `ActivityEntity` → tabla `activities`.
+
+**@Dao (Data Access Object)**  
+Interfaz anotada de Room donde se definen las consultas SQL o de alto nivel (`@Insert`, `@Query`, `@Delete`). Room genera automáticamente la implementación en tiempo de compilación.
+
+**@HiltViewModel**  
+Anotación que marca un ViewModel para que Hilt sepa cómo construirlo con sus dependencias. La pantalla lo solicita con `hiltViewModel()` sin necesidad de pasarle parámetros manualmente.
+
+**@Singleton**  
+Anotación de Hilt que indica que solo debe existir una instancia de esa clase durante toda la vida de la aplicación. Se usa en repositorios y en la base de datos.
+
+**@Binds**  
+Anotación de Hilt en `AppModule` que le dice al sistema de DI: "cuando alguien pida `ActivityRepository` (la interfaz), dales `ActivityRepositoryImpl` (la implementación)".
+
+**@Provides**  
+Anotación de Hilt en `DatabaseModule` que le dice al sistema de DI cómo construir objetos que requieren código personalizado (como la instancia de `AppDatabase` con `Room.databaseBuilder`).
+
+---
+
+### Principios SOLID
+
+**S — Single Responsibility (Responsabilidad Única)**  
+Cada clase debe tener una sola razón para cambiar. `LoginUseCase` solo valida y autentica; `AuthRepositoryImpl` solo gestiona el almacenamiento. No mezclan responsabilidades.
+
+**O — Open/Closed (Abierto/Cerrado)**  
+El código debe estar abierto para extensión pero cerrado para modificación. Si se quiere agregar autenticación con Google, se crea `GoogleAuthRepositoryImpl` sin tocar `LoginUseCase` ni los ViewModels.
+
+**L — Liskov Substitution (Sustitución de Liskov)**  
+Una implementación concreta debe poder reemplazar a su interfaz sin que el código que la usa se entere. `ActivityRepositoryImpl` puede sustituirse por cualquier otra implementación de `ActivityRepository`.
+
+**I — Interface Segregation (Segregación de Interfaces)**  
+Es mejor tener varias interfaces pequeñas y específicas que una grande y general. `ProfileRepository` solo expone métodos del perfil; no incluye métodos de salud ni de citas.
+
+**D — Dependency Inversion (Inversión de Dependencias)**  
+Las clases de alto nivel (ViewModels) no deben depender de las de bajo nivel (implementaciones concretas). Ambas deben depender de abstracciones (interfaces). El ViewModel conoce `ActivityRepository` (interfaz), nunca `ActivityRepositoryImpl` directamente.
+
+---
+
+### Términos generales de Android
+
+**Composable**  
+Función de Jetpack Compose anotada con `@Composable` que describe una parte de la interfaz de usuario. Se recompone automáticamente cuando cambia el estado que observa.
+
+**NavController / NavGraph**  
+Sistema de navegación de Android. `NavGraph` define todas las rutas posibles de la app (Login → Register → Main). `NavController` es el objeto que ejecuta la navegación en tiempo de ejecución.
+
+**LaunchedEffect**  
+Efecto secundario en Compose que se ejecuta una vez cuando cambia una clave. Se usa para acciones que deben ocurrir como respuesta a un cambio de estado, como navegar al login cuando el usuario cierra sesión.
+
+**collectAsStateWithLifecycle()**  
+Función que convierte un `Flow` o `StateFlow` en un estado de Compose (`State<T>`), respetando el ciclo de vida de Android: pausa la recolección cuando la pantalla no está visible y la reanuda cuando vuelve.
+
+**APK (Android Package Kit)**  
+Archivo empaquetado que contiene toda la aplicación Android: código compilado, recursos, manifesto y librerías. Es lo que se instala en el dispositivo.
+
+**Gradle / KTS**  
+Sistema de construcción de Android que compila el código, gestiona dependencias y genera el APK. KTS (Kotlin Script) es la variante moderna que escribe los archivos de configuración en Kotlin en lugar de Groovy.
+
+**Version Catalog (`libs.versions.toml`)**  
+Archivo centralizado de Gradle donde se declaran todas las versiones de librerías en un solo lugar. Evita repetir versiones en múltiples archivos `build.gradle.kts`.
 
 ---
 
