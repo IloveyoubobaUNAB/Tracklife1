@@ -14,22 +14,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.jpalomino502.vivebien.feature.auth.ui.LoginViewModel
 import com.jpalomino502.vivebien.navigation.Screen
-import com.jpalomino502.vivebien.utils.Constants
 
 @Composable
-fun LoginScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf("") }
+fun LoginScreen(
+    navController: NavController,
+    viewModel: LoginViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.loginSuccess) {
+        if (uiState.loginSuccess) {
+            navController.navigate(Screen.Main.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        TopWave(modifier = Modifier.fillMaxWidth().height(200.dp))
+        TopWave(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp))
 
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -50,16 +63,16 @@ fun LoginScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
+                    value = uiState.username,
+                    onValueChange = viewModel::onUsernameChanged,
                     label = { Text("Usuario") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = uiState.password,
+                    onValueChange = viewModel::onPasswordChanged,
                     label = { Text("Contraseña") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -67,25 +80,14 @@ fun LoginScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                if (error.isNotEmpty()) {
-                    Text(text = error, color = Color.Red, fontSize = 14.sp)
+                if (uiState.errorMessage.isNotEmpty()) {
+                    Text(text = uiState.errorMessage, color = Color.Red, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Button(
-                    onClick = {
-                        val trimmedUser = username.trim()
-                        val trimmedPass = password.trim()
-
-                        if (trimmedUser == Constants.TEST_USER && trimmedPass == Constants.TEST_PASSWORD) {
-                            error = ""
-                            navController.navigate(Screen.Main.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
-                            }
-                        } else {
-                            error = "Credenciales incorrectas"
-                        }
-                    },
+                    onClick = viewModel::onLoginClicked,
+                    enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -93,7 +95,15 @@ fun LoginScreen(navController: NavController) {
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Iniciar Sesión")
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Iniciar Sesión")
+                    }
                 }
             }
         }

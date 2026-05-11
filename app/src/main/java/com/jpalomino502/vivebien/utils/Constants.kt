@@ -1,6 +1,6 @@
 package com.jpalomino502.vivebien.utils
 
 object Constants {
-    const val TEST_USER = ""
-    const val TEST_PASSWORD = ""
+    const val APP_NAME = "ViveBien"
+    const val DATABASE_NAME = "vivebien_db"
 }
