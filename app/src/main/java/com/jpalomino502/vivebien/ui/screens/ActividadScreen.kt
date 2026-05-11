@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,9 +13,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jpalomino502.vivebien.core.domain.model.ActivityRecord
+import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
+import com.jpalomino502.vivebien.feature.activity.ui.ActivityViewModel
 
 @Composable
-fun ActividadScreen() {
+fun ActividadScreen(viewModel: ActivityViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val stats = uiState.dailyStats
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -27,11 +34,7 @@ fun ActividadScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header con título
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -41,11 +44,7 @@ fun ActividadScreen() {
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "📊",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+                        Text(text = "📊", color = Color.White, fontSize = 12.sp)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -58,7 +57,6 @@ fun ActividadScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tarjeta de progreso circular
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -68,7 +66,6 @@ fun ActividadScreen() {
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Círculo de progreso
                     Box(
                         modifier = Modifier
                             .size(120.dp)
@@ -83,67 +80,43 @@ fun ActividadScreen() {
                                 .background(Color(0x66FFFFFF)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    "65%",
+                                    "${stats.goalPercent}%",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
-                                Text(
-                                    "Objetivo",
-                                    fontSize = 14.sp,
-                                    color = Color.White.copy(alpha = 0.8f)
-                                )
+                                Text("Objetivo", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Estadísticas
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Pasos", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                             Text(
-                                "Pasos",
-                                fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                "8,542",
+                                "%,d".format(stats.steps),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
-
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Calorías", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                             Text(
-                                "Calorías",
-                                fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                "320",
+                                "${stats.calories}",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
-
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Distancia", fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
                             Text(
-                                "Distancia",
-                                fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                "4.2 km",
+                                "%.1f km".format(stats.distanceKm),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -155,99 +128,36 @@ fun ActividadScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tabs de Hoy, Semana, Plan
             var selectedTab by remember { mutableStateOf(0) }
-            val tabs = listOf("Hoy", "Semana", "Plan")
-
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color(0xFFEEF2F5),
-                contentColor = Color(0xFF4CAF50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp)),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        height = 0.dp
-                    )
-                },
-                divider = { Divider(thickness = 0.dp) }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (selectedTab == index) Color.White else Color.Transparent
-                            ),
-                        text = {
-                            Text(
-                                title,
-                                fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal,
-                                color = if (selectedTab == index) Color(0xFF4CAF50) else Color.Gray
-                            )
-                        }
-                    )
-                }
-            }
+            CustomTabRow(
+                tabs = listOf("Hoy", "Semana", "Plan"),
+                selectedIndex = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Actividades de Hoy
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Actividades de Hoy", fontWeight = FontWeight.Medium, fontSize = 18.sp)
                     Text(
-                        "Actividades de Hoy",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 18.sp
-                    )
-                    Text(
-                        "15 de Abril, 2025",
+                        java.time.LocalDate.now().format(
+                            java.time.format.DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy", java.util.Locale("es"))
+                        ),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    ActividadItem(
-                        color = Color(0xFF4CAF50),
-                        icon = "📊",
-                        titulo = "Caminata",
-                        duracion = "30 minutos",
-                        distancia = "2.5 km",
-                        completado = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    ActividadItem(
-                        color = Color(0xFF2196F3),
-                        icon = "📊",
-                        titulo = "Ejercicios de estiramiento",
-                        duracion = "15 minutos",
-                        distancia = null,
-                        completado = true
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    ActividadItem(
-                        color = Color(0xFF9C27B0),
-                        icon = "📊",
-                        titulo = "Caminata vespertina",
-                        duracion = "30 minutos",
-                        distancia = null,
-                        hora = "5:00 PM",
-                        completado = false
-                    )
+                    uiState.todayActivities.forEachIndexed { index, activity ->
+                        if (index > 0) Spacer(modifier = Modifier.height(12.dp))
+                        ActividadItem(activity = activity)
+                    }
                 }
             }
         }
@@ -255,26 +165,21 @@ fun ActividadScreen() {
 }
 
 @Composable
-fun ActividadItem(
-    color: Color,
-    icon: String,
-    titulo: String,
-    duracion: String,
-    distancia: String? = null,
-    hora: String? = null,
-    completado: Boolean
-) {
+fun ActividadItem(activity: ActivityRecord) {
+    val color = when {
+        activity.completed -> Color(0xFF4CAF50)
+        activity.scheduledTime != null -> Color(0xFF9C27B0)
+        else -> Color(0xFF2196F3)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (completado) Color(0xFFE8F5E9) else Color(0xFFFCE4EC)
+            containerColor = if (activity.completed) Color(0xFFE8F5E9) else Color(0xFFFCE4EC)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -282,71 +187,39 @@ fun ActividadItem(
                     .background(color),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = icon,
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
+                Text(text = "📊", color = Color.White, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Información
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = titulo,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                )
-
+                Text(text = activity.title, fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "⏱ $duracion",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    if (distancia != null) {
+                    Text(text = "⏱ ${activity.durationMinutes} minutos", fontSize = 14.sp, color = Color.Gray)
+                    activity.distanceKm?.let {
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "• $distancia",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
+                        Text(text = "• %.1f km".format(it), fontSize = 14.sp, color = Color.Gray)
                     }
-
-                    if (hora != null) {
+                    activity.scheduledTime?.let {
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "• $hora",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
+                        Text(text = "• $it", fontSize = 14.sp, color = Color.Gray)
                     }
                 }
             }
 
-            // Estado
             Box(
                 modifier = Modifier
                     .size(12.dp)
                     .clip(CircleShape)
-                    .background(if (completado) Color(0xFF4CAF50) else Color(0xFFFF9800)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (completado) "✓" else "!",
-                    color = Color.White,
-                    fontSize = 8.sp
-                )
-            }
+                    .background(if (activity.completed) Color(0xFF4CAF50) else Color(0xFFFF9800))
+            )
 
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = if (completado) "Completado" else "Pendiente",
+                text = if (activity.completed) "Completado" else "Pendiente",
                 fontSize = 12.sp,
-                color = if (completado) Color(0xFF4CAF50) else Color(0xFFFF9800)
+                color = if (activity.completed) Color(0xFF4CAF50) else Color(0xFFFF9800)
             )
         }
     }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,56 +13,49 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
+import com.jpalomino502.vivebien.feature.home.ui.HomeViewModel
 
 @Composable
-fun HomeScreen() {
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color(0xFFF8F8F8)))
-    {
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F8F8))
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            // Encabezado con nombre de la app y fecha
-            HeaderSection()
-
+            HeaderSection(greeting = uiState.greeting, date = uiState.currentDate)
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Tarjeta: Plan Personalizado
-            PlanPersonalizadoCard()
-
+            PlanPersonalizadoCard(
+                progress = uiState.planProgress,
+                progressPercent = uiState.planProgressPercent
+            )
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Fila con 2 tarjetas: Próxima Cita y Pasos Hoy
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ProximaCitaCard(
-                    modifier = Modifier.weight(1f)
-                )
-                PasosHoyCard(
-                    modifier = Modifier.weight(1f)
-                )
+                ProximaCitaCard(nextAppointment = uiState.nextAppointment, modifier = Modifier.weight(1f))
+                PasosHoyCard(stepsToday = uiState.stepsToday, modifier = Modifier.weight(1f))
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Sección de Tabs: "Salud", "Actividades", "Dispositivos"
             SaludActividadesTabs()
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Tarjeta: Ritmo Cardíaco
             RitmoCardiacoCard()
         }
     }
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(greeting: String, date: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -78,11 +70,7 @@ fun HeaderSection() {
                     .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "♥",
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
+                Text(text = "♥", color = Color.White, fontSize = 12.sp)
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -92,29 +80,20 @@ fun HeaderSection() {
                 color = Color(0xFF4CAF50)
             )
         }
-        Text(
-            text = "Lunes, 15 de Abril",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
-        )
+        Text(text = date, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
     }
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    Text(
-        text = "Hola, María",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Medium
-    )
+    Text(text = greeting, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
 }
 
 @Composable
-fun PlanPersonalizadoCard() {
-    val purpleCardColor = Color(0xFFF8EFFF)
+fun PlanPersonalizadoCard(progress: Float, progressPercent: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = purpleCardColor)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8EFFF))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -136,17 +115,14 @@ fun PlanPersonalizadoCard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LinearProgressIndicator(
-                    progress = 0.68f,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                    progress = progress,
+                    modifier = Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)),
                     color = Color(0xFF4CAF50),
                     trackColor = Color(0xFFE1D4F2)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "68%",
+                    text = "$progressPercent%",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF673AB7)
@@ -157,18 +133,16 @@ fun PlanPersonalizadoCard() {
 }
 
 @Composable
-fun ProximaCitaCard(modifier: Modifier = Modifier) {
-    val blueCardColor = Color(0xFF2196F3)
+fun ProximaCitaCard(nextAppointment: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = blueCardColor)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2196F3))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icono de calendario
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -177,45 +151,27 @@ fun ProximaCitaCard(modifier: Modifier = Modifier) {
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "📅",
-                    fontSize = 16.sp
-                )
+                Text(text = "📅", fontSize = 16.sp)
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                "Próxima Cita",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-
+            Text("Próxima Cita", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                "15 Abr, 10:00 AM",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f)
-            )
+            Text(nextAppointment, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
         }
     }
 }
 
 @Composable
-fun PasosHoyCard(modifier: Modifier = Modifier) {
-    val greenCardColor = Color(0xFF4CAF50)
+fun PasosHoyCard(stepsToday: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = greenCardColor)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF4CAF50))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icono de pasos
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -224,28 +180,12 @@ fun PasosHoyCard(modifier: Modifier = Modifier) {
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "📊",
-                    fontSize = 16.sp
-                )
+                Text(text = "📊", fontSize = 16.sp)
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                "Pasos Hoy",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-
+            Text("Pasos Hoy", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                "8,542 pasos",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.9f)
-            )
+            Text(stepsToday, fontSize = 14.sp, color = Color.White.copy(alpha = 0.9f))
         }
     }
 }
@@ -253,35 +193,11 @@ fun PasosHoyCard(modifier: Modifier = Modifier) {
 @Composable
 fun SaludActividadesTabs() {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabList = listOf("Salud", "Actividades", "Dispositivos")
-
-    TabRow(
-        selectedTabIndex = selectedTab,
-        containerColor = Color.Transparent,
-        contentColor = Color(0xFF4CAF50),
-        indicator = { tabPositions ->
-            TabRowDefaults.Indicator(
-                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                height = 2.dp,
-                color = Color(0xFF4CAF50)
-            )
-        }
-    ) {
-        tabList.forEachIndexed { index, title ->
-            Tab(
-                selected = selectedTab == index,
-                onClick = { selectedTab = index },
-                text = {
-                    Text(
-                        title,
-                        fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal
-                    )
-                },
-                selectedContentColor = Color(0xFF4CAF50),
-                unselectedContentColor = Color.Gray
-            )
-        }
-    }
+    CustomTabRow(
+        tabs = listOf("Salud", "Actividades", "Dispositivos"),
+        selectedIndex = selectedTab,
+        onTabSelected = { selectedTab = it }
+    )
 }
 
 @Composable
@@ -293,23 +209,10 @@ fun RitmoCardiacoCard() {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Ritmo Cardíaco",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
-            )
-
+            Text("Ritmo Cardíaco", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                "Últimas 24 horas",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-
+            Text("Últimas 24 horas", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Placeholder para el gráfico
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -317,10 +220,7 @@ fun RitmoCardiacoCard() {
                     .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Gráfico de ritmo cardíaco",
-                    color = Color.Gray
-                )
+                Text(text = "Gráfico de ritmo cardíaco", color = Color.Gray)
             }
         }
     }

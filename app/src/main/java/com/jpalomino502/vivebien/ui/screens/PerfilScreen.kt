@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,9 +14,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jpalomino502.vivebien.core.domain.model.User
+import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
+import com.jpalomino502.vivebien.feature.profile.ui.ProfileViewModel
 
 @Composable
-fun PerfilScreen() {
+fun PerfilScreen(viewModel: ProfileViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -28,11 +34,7 @@ fun PerfilScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header con título
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -42,11 +44,7 @@ fun PerfilScreen() {
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "👤",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+                        Text(text = "👤", color = Color.White, fontSize = 12.sp)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -59,7 +57,6 @@ fun PerfilScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Foto de perfil (simulada con un círculo)
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -69,7 +66,7 @@ fun PerfilScreen() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "MG",
+                    text = uiState.user.initials,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -78,17 +75,15 @@ fun PerfilScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nombre y ID
             Text(
-                text = "María García",
+                text = uiState.user.name,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-
             Text(
-                text = "ID: VB-78542",
+                text = "ID: ${uiState.user.id}",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
@@ -97,127 +92,61 @@ fun PerfilScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tabs de Información, Dispositivos, Ajustes
             var selectedTab by remember { mutableStateOf(0) }
-            val tabs = listOf("Información", "Dispositivos", "Ajustes")
-
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color(0xFFEEF2F5),
-                contentColor = Color(0xFF4CAF50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp)),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        height = 0.dp
-                    )
-                },
-                divider = { Divider(thickness = 0.dp) }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (selectedTab == index) Color.White else Color.Transparent
-                            ),
-                        text = {
-                            Text(
-                                title,
-                                fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal,
-                                color = if (selectedTab == index) Color(0xFF4CAF50) else Color.Gray
-                            )
-                        }
-                    )
-                }
-            }
+            CustomTabRow(
+                tabs = listOf("Información", "Dispositivos", "Ajustes"),
+                selectedIndex = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTab) {
-                0 -> InformacionTabContent()
+                0 -> InformacionTabContent(user = uiState.user)
                 1 -> DispositivosTabContent()
-                2 -> AjustesTabContent()
+                2 -> AjustesTabContent(
+                    notificationsEnabled = uiState.notificationsEnabled,
+                    darkModeEnabled = uiState.darkModeEnabled,
+                    onNotificationsToggled = viewModel::onNotificationsToggled,
+                    onDarkModeToggled = viewModel::onDarkModeToggled
+                )
             }
         }
     }
 }
 
 @Composable
-fun InformacionTabContent() {
+fun InformacionTabContent(user: User) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Información Personal",
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.sp
-            )
-
+            Text("Información Personal", fontWeight = FontWeight.Medium, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                "Datos básicos de tu perfil",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
+            Text("Datos básicos de tu perfil", fontSize = 14.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(16.dp))
 
-            CampoInformacion(
-                etiqueta = "Nombre completo",
-                valor = "María García López"
-            )
-
+            CampoInformacion(etiqueta = "Nombre completo", valor = user.name)
             Spacer(modifier = Modifier.height(16.dp))
-
-            CampoInformacion(
-                etiqueta = "Correo electrónico",
-                valor = "maria.garcia@ejemplo.com"
-            )
-
+            CampoInformacion(etiqueta = "Correo electrónico", valor = user.email)
             Spacer(modifier = Modifier.height(16.dp))
-
-            CampoInformacion(
-                etiqueta = "Teléfono",
-                valor = "+34 612 345 678"
-            )
-
+            CampoInformacion(etiqueta = "Teléfono", valor = user.phone)
             Spacer(modifier = Modifier.height(16.dp))
-
-            CampoInformacion(
-                etiqueta = "Fecha de nacimiento",
-                valor = "15/05/1957"
-            )
+            CampoInformacion(etiqueta = "Fecha de nacimiento", valor = user.birthDate)
         }
     }
 }
 
 @Composable
-fun CampoInformacion(
-    etiqueta: String,
-    valor: String
-) {
+fun CampoInformacion(etiqueta: String, valor: String) {
     Column {
-        Text(
-            text = etiqueta,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-
+        Text(text = etiqueta, fontSize = 14.sp, color = Color.Gray)
         Spacer(modifier = Modifier.height(4.dp))
-
         OutlinedTextField(
             value = valor,
-            onValueChange = { /* No editable */ },
+            onValueChange = { },
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
@@ -237,24 +166,14 @@ fun DispositivosTabContent() {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Dispositivos",
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.sp
-            )
-
+            Text("Dispositivos", fontWeight = FontWeight.Medium, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Dispositivo 1
             DispositivoItem(
                 nombre = "Smartwatch XYZ",
                 estado = "Conectado",
                 ultimaSincronizacion = "Hoy, 10:30 AM"
             )
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Dispositivo 2
             DispositivoItem(
                 nombre = "Pulsera de actividad ABC",
                 estado = "Desconectado",
@@ -263,23 +182,15 @@ fun DispositivosTabContent() {
         }
     }
 }
+
 @Composable
-fun DispositivoItem(
-    nombre: String,
-    estado: String,
-    ultimaSincronizacion: String
-) {
+fun DispositivoItem(nombre: String, estado: String, ultimaSincronizacion: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -287,29 +198,16 @@ fun DispositivoItem(
                     .background(Color(0xFF2196F3)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "⌚",
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
+                Text(text = "⌚", color = Color.White, fontSize = 16.sp)
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-
-            // Información
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = nombre,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                )
-
+                Text(text = nombre, fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 Text(
                     text = estado,
                     fontSize = 14.sp,
                     color = if (estado == "Conectado") Color(0xFF4CAF50) else Color.Gray
                 )
-
                 Text(
                     text = "Última sincronización: $ultimaSincronizacion",
                     fontSize = 12.sp,
@@ -321,53 +219,37 @@ fun DispositivoItem(
 }
 
 @Composable
-fun AjustesTabContent() {
+fun AjustesTabContent(
+    notificationsEnabled: Boolean,
+    darkModeEnabled: Boolean,
+    onNotificationsToggled: (Boolean) -> Unit,
+    onDarkModeToggled: (Boolean) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Ajustes",
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.sp
-            )
-
+            Text("Ajustes", fontWeight = FontWeight.Medium, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Ajuste de notificaciones
             AjusteItem(
                 titulo = "Notificaciones",
                 descripcion = "Recibe alertas sobre tus citas y actividades",
-                activado = true
+                activado = notificationsEnabled,
+                onToggle = onNotificationsToggled
             )
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Ajuste de idioma
-            AjusteItem(
-                titulo = "Idioma",
-                descripcion = "Español",
-                esSwitch = false
-            )
-
+            AjusteItem(titulo = "Idioma", descripcion = "Español", esSwitch = false)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Ajuste de privacidad
-            AjusteItem(
-                titulo = "Privacidad",
-                descripcion = "Gestiona tus datos personales",
-                esSwitch = false
-            )
-
+            AjusteItem(titulo = "Privacidad", descripcion = "Gestiona tus datos personales", esSwitch = false)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Ajuste de tema oscuro
             AjusteItem(
                 titulo = "Tema Oscuro",
                 descripcion = "Cambia la apariencia de la aplicación",
-                activado = false
+                activado = darkModeEnabled,
+                onToggle = onDarkModeToggled
             )
         }
     }
@@ -378,7 +260,8 @@ fun AjusteItem(
     titulo: String,
     descripcion: String,
     activado: Boolean = false,
-    esSwitch: Boolean = true
+    esSwitch: Boolean = true,
+    onToggle: (Boolean) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -387,23 +270,13 @@ fun AjusteItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = titulo,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
-            )
-
-            Text(
-                text = descripcion,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+            Text(text = titulo, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+            Text(text = descripcion, fontSize = 14.sp, color = Color.Gray)
         }
-
         if (esSwitch) {
             Switch(
                 checked = activado,
-                onCheckedChange = { /* Acción al cambiar */ },
+                onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = Color(0xFF4CAF50),
@@ -412,11 +285,7 @@ fun AjusteItem(
                 )
             )
         } else {
-            Text(
-                text = ">",
-                fontSize = 18.sp,
-                color = Color.Gray
-            )
+            Text(text = ">", fontSize = 18.sp, color = Color.Gray)
         }
     }
 }

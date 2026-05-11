@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,9 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jpalomino502.vivebien.core.domain.model.Appointment
+import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
+import com.jpalomino502.vivebien.feature.appointments.ui.AppointmentsViewModel
 
 @Composable
-fun CitasScreen() {
+fun CitasScreen(viewModel: AppointmentsViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -30,7 +36,6 @@ fun CitasScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header con título y botón de nueva cita
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -45,11 +50,7 @@ fun CitasScreen() {
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "📅",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+                        Text(text = "📅", color = Color.White, fontSize = 12.sp)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -58,12 +59,9 @@ fun CitasScreen() {
                         fontWeight = FontWeight.Bold
                     )
                 }
-
                 Button(
-                    onClick = { /* Acción para nueva cita */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
+                    onClick = { },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("+ Nueva Cita")
@@ -72,66 +70,104 @@ fun CitasScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Título del mes
             Text(
-                text = "Abril 2025",
+                text = java.time.YearMonth.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale("es"))
+                ).replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Calendario
             CalendarioMes()
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tabs de Próximas y Pasadas
             var selectedTab by remember { mutableStateOf(0) }
-            val tabs = listOf("Próximas", "Pasadas")
-
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = Color(0xFFEEF2F5),
-                contentColor = Color(0xFF4CAF50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp)),
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        height = 0.dp // Sin indicador visible
-                    )
-                },
-                divider = { Divider(thickness = 0.dp) } // Sin divisor
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (selectedTab == index) Color.White else Color.Transparent
-                            ),
-                        text = {
-                            Text(
-                                title,
-                                fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal,
-                                color = if (selectedTab == index) Color(0xFF4CAF50) else Color.Gray
-                            )
-                        }
-                    )
-                }
-            }
+            CustomTabRow(
+                tabs = listOf("Próximas", "Pasadas"),
+                selectedIndex = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contenido según el tab seleccionado
             when (selectedTab) {
-                0 -> ProximasCitasContent()
-                1 -> PasadasCitasContent()
+                0 -> CitasContent(appointments = uiState.upcomingAppointments)
+                1 -> CitasContent(appointments = uiState.pastAppointments)
+            }
+        }
+    }
+}
+
+@Composable
+fun CitasContent(appointments: List<Appointment>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        appointments.forEachIndexed { index, appointment ->
+            if (index > 0) Spacer(modifier = Modifier.height(16.dp))
+            CitaCard(appointment = appointment)
+        }
+    }
+}
+
+@Composable
+fun CitaCard(appointment: Appointment) {
+    val accentColor = when {
+        appointment.isPast -> Color(0xFF9E9E9E)
+        appointment.isVirtual -> Color(0xFF9C27B0)
+        else -> Color(0xFF2196F3)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(accentColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (appointment.isVirtual) "📱" else "📅",
+                    color = Color.White,
+                    fontSize = 20.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = appointment.title, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+                Text(
+                    text = "${appointment.doctorName} - ${appointment.specialty}",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "⏱ ${appointment.dateTime}", fontSize = 14.sp, color = Color.Gray)
+                if (appointment.location.isNotBlank()) {
+                    Text(text = "📍 ${appointment.location}", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+
+            if (!appointment.isPast) {
+                Button(
+                    onClick = { },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = accentColor
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text("Reprogramar")
+                }
             }
         }
     }
@@ -145,7 +181,6 @@ fun CalendarioMes() {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Navegación del mes
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -156,30 +191,28 @@ fun CalendarioMes() {
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Gray,
-                    modifier = Modifier.clickable { /* Mes anterior */ }
+                    modifier = Modifier.clickable { }
                 )
-
                 Text(
-                    text = "March 2025",
+                    text = java.time.YearMonth.now().format(
+                        java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale("es"))
+                    ).replaceFirstChar { it.uppercase() },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
-
                 Text(
                     text = " >",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Gray,
-                    modifier = Modifier.clickable { /* Mes siguiente */ }
+                    modifier = Modifier.clickable { }
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Días de la semana
             Row(modifier = Modifier.fillMaxWidth()) {
-                val diasSemana = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
-                diasSemana.forEach { dia ->
+                listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa").forEach { dia ->
                     Text(
                         text = dia,
                         modifier = Modifier.weight(1f),
@@ -192,95 +225,36 @@ fun CalendarioMes() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Semana 1
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 23..29) {
-                    val esDelMesActual = i >= 25
-                    DiaCalendario(
-                        dia = i,
-                        estaSeleccionado = false,
-                        esDelMesActual = esDelMesActual
-                    )
-                }
+            val today = java.time.LocalDate.now()
+            val firstDayOfMonth = today.withDayOfMonth(1)
+            val startOffset = firstDayOfMonth.dayOfWeek.value % 7
+            val daysInMonth = today.lengthOfMonth()
+
+            val calendarDays = buildList {
+                repeat(startOffset) { add(-1) }
+                for (d in 1..daysInMonth) add(d)
+                val remaining = (7 - size % 7) % 7
+                repeat(remaining) { add(-1) }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Semana 2
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 1..7) {
-                    DiaCalendario(
-                        dia = i,
-                        estaSeleccionado = false,
-                        esDelMesActual = true
-                    )
+            calendarDays.chunked(7).forEach { week ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    week.forEach { day ->
+                        DiaCalendario(
+                            dia = if (day > 0) day else 0,
+                            estaSeleccionado = day == today.dayOfMonth,
+                            esDelMesActual = day > 0
+                        )
+                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Semana 3
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 8..14) {
-                    DiaCalendario(
-                        dia = i,
-                        estaSeleccionado = i == 11,
-                        esDelMesActual = true
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Semana 4
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 15..21) {
-                    DiaCalendario(
-                        dia = i,
-                        estaSeleccionado = i == 18,
-                        esDelMesActual = true,
-                        tieneEvento = i == 18
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Semana 5
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 22..28) {
-                    DiaCalendario(
-                        dia = i,
-                        estaSeleccionado = false,
-                        esDelMesActual = true
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Semana 6
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (i in 29..35) {
-                    val esDelMesActual = i <= 31
-                    DiaCalendario(
-                        dia = if (i > 31) i - 31 else i,
-                        estaSeleccionado = false,
-                        esDelMesActual = esDelMesActual
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 }
 
 @Composable
-fun DiaCalendario(
-    dia: Int,
-    estaSeleccionado: Boolean,
-    esDelMesActual: Boolean,
-    tieneEvento: Boolean = false
-) {
+fun DiaCalendario(dia: Int, estaSeleccionado: Boolean, esDelMesActual: Boolean, tieneEvento: Boolean = false) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,226 +274,19 @@ fun DiaCalendario(
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
-    )
-    {
-        Text(
-            text = dia.toString(),
-            fontSize = 14.sp,
-            fontWeight = if (estaSeleccionado || tieneEvento) FontWeight.Medium else FontWeight.Normal,
-            color = when {
-                estaSeleccionado -> Color.White
-                !esDelMesActual -> Color.LightGray
-                tieneEvento -> Color(0xFF4CAF50)
-                else -> Color.Black
-            }
-        )
-    }
-}
-
-@Composable
-fun ProximasCitasContent() {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Cita 1: Control Médico
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icono
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF2196F3)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "📅",
-                        color = Color.White,
-                        fontSize = 20.sp
-                    )
+    ) {
+        if (dia > 0) {
+            Text(
+                text = dia.toString(),
+                fontSize = 14.sp,
+                fontWeight = if (estaSeleccionado || tieneEvento) FontWeight.Medium else FontWeight.Normal,
+                color = when {
+                    estaSeleccionado -> Color.White
+                    !esDelMesActual -> Color.LightGray
+                    tieneEvento -> Color(0xFF4CAF50)
+                    else -> Color.Black
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Información
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Control Médico",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "Dr. Martínez - Medicina General",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "⏱ 15 de Abril, 10:00 AM",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "📍 Centro Médico ViveBien",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                // Botón de reprogramar
-                Button(
-                    onClick = { /* Acción para reprogramar */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF2196F3)
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Reprogramar")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Cita 2: Consulta Virtual
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icono
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF9C27B0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "📱",
-                        color = Color.White,
-                        fontSize = 20.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Información
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Consulta Virtual",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "Dra. López - Nutrición",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "⏱ 20 de Abril, 3:00 PM",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-
-                // Botón de reprogramar
-                Button(
-                    onClick = { /* Acción para reprogramar */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF9C27B0)
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Reprogramar")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PasadasCitasContent() {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Cita pasada
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Icono
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF9E9E9E)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "📱",
-                        color = Color.White,
-                        fontSize = 20.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Información
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Consulta Virtual",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "Dr. Ramírez - Cardiología",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "⏱ 10 de Marzo, 3:00 PM",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            }
+            )
         }
     }
 }
