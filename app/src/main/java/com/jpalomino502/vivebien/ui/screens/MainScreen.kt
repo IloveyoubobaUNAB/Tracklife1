@@ -2,7 +2,6 @@ package com.jpalomino502.vivebien.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,9 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import com.jpalomino502.vivebien.navigation.ScreenHome
 import com.jpalomino502.vivebien.ui.components.BottomBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(rootNavController: NavHostController = rememberNavController()) {
     val bottomNavController: NavHostController = rememberNavController()
 
     Scaffold(
@@ -30,7 +28,7 @@ fun MainScreen() {
                 composable(ScreenHome.Salud.route) { SaludScreen() }
                 composable(ScreenHome.Actividad.route) { ActividadScreen() }
                 composable(ScreenHome.Citas.route) { CitasScreen() }
-                composable(ScreenHome.Perfil.route) { PerfilScreen() }
+                composable(ScreenHome.Perfil.route) { PerfilScreen(navController = rootNavController) }
             }
         }
     }

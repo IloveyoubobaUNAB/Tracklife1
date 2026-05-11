@@ -2,8 +2,10 @@ package com.jpalomino502.vivebien.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,85 +18,87 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.jpalomino502.vivebien.core.domain.model.User
 import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
 import com.jpalomino502.vivebien.feature.profile.ui.ProfileViewModel
+import com.jpalomino502.vivebien.navigation.Screen
 
 @Composable
-fun PerfilScreen(viewModel: ProfileViewModel = hiltViewModel()) {
+fun PerfilScreen(
+    navController: NavController = rememberNavController(),
+    viewModel: ProfileViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
-    ) {
+    LaunchedEffect(uiState.loggedOut) {
+        if (uiState.loggedOut) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F8F8))) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFF4CAF50))
-                            .padding(4.dp),
+                        modifier = Modifier.size(24.dp).clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF4CAF50)).padding(4.dp),
                         contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "👤", color = Color.White, fontSize = 12.sp)
-                    }
+                    ) { Text(text = "👤", color = Color.White, fontSize = 12.sp) }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Perfil",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Perfil", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+                if (!uiState.isEditMode) {
+                    TextButton(onClick = viewModel::onStartEdit) {
+                        Text("Editar", color = Color(0xFF4CAF50))
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray)
-                    .align(Alignment.CenterHorizontally),
+                modifier = Modifier.size(80.dp).clip(CircleShape)
+                    .background(Color(0xFF4CAF50)).align(Alignment.CenterHorizontally),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = uiState.user.initials,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    text = if (uiState.isLoading) "…" else uiState.user.initials.ifBlank { "?" },
+                    fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = uiState.user.name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                text = if (uiState.isLoading) "Cargando..." else uiState.user.name,
+                fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = "ID: ${uiState.user.id}",
-                fontSize = 14.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                text = if (uiState.user.id.isNotBlank()) "Usuario: ${uiState.user.id}" else "",
+                fontSize = 14.sp, color = Color.Gray,
+                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
             CustomTabRow(
-                tabs = listOf("Información", "Dispositivos", "Ajustes"),
+                tabs = listOf("Información", "Ajustes"),
                 selectedIndex = selectedTab,
                 onTabSelected = { selectedTab = it }
             )
@@ -102,13 +106,27 @@ fun PerfilScreen(viewModel: ProfileViewModel = hiltViewModel()) {
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTab) {
-                0 -> InformacionTabContent(user = uiState.user)
-                1 -> DispositivosTabContent()
-                2 -> AjustesTabContent(
+                0 -> InformacionTabContent(
+                    user = uiState.user,
+                    isEditMode = uiState.isEditMode,
+                    editName = uiState.editName,
+                    editEmail = uiState.editEmail,
+                    editPhone = uiState.editPhone,
+                    editBirthDate = uiState.editBirthDate,
+                    errorMessage = uiState.errorMessage,
+                    onNameChanged = viewModel::onEditNameChanged,
+                    onEmailChanged = viewModel::onEditEmailChanged,
+                    onPhoneChanged = viewModel::onEditPhoneChanged,
+                    onBirthDateChanged = viewModel::onEditBirthDateChanged,
+                    onSave = viewModel::onSaveProfile,
+                    onCancel = viewModel::onCancelEdit
+                )
+                1 -> AjustesTabContent(
                     notificationsEnabled = uiState.notificationsEnabled,
                     darkModeEnabled = uiState.darkModeEnabled,
                     onNotificationsToggled = viewModel::onNotificationsToggled,
-                    onDarkModeToggled = viewModel::onDarkModeToggled
+                    onDarkModeToggled = viewModel::onDarkModeToggled,
+                    onLogout = viewModel::onLogout
                 )
             }
         }
@@ -116,7 +134,21 @@ fun PerfilScreen(viewModel: ProfileViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun InformacionTabContent(user: User) {
+fun InformacionTabContent(
+    user: User,
+    isEditMode: Boolean,
+    editName: String,
+    editEmail: String,
+    editPhone: String,
+    editBirthDate: String,
+    errorMessage: String,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onPhoneChanged: (String) -> Unit,
+    onBirthDateChanged: (String) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -128,14 +160,53 @@ fun InformacionTabContent(user: User) {
             Text("Datos básicos de tu perfil", fontSize = 14.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(16.dp))
 
-            CampoInformacion(etiqueta = "Nombre completo", valor = user.name)
-            Spacer(modifier = Modifier.height(16.dp))
-            CampoInformacion(etiqueta = "Correo electrónico", valor = user.email)
-            Spacer(modifier = Modifier.height(16.dp))
-            CampoInformacion(etiqueta = "Teléfono", valor = user.phone)
-            Spacer(modifier = Modifier.height(16.dp))
-            CampoInformacion(etiqueta = "Fecha de nacimiento", valor = user.birthDate)
+            if (isEditMode) {
+                CampoEditable("Nombre completo", editName, onNameChanged)
+                Spacer(modifier = Modifier.height(12.dp))
+                CampoEditable("Correo electrónico", editEmail, onEmailChanged)
+                Spacer(modifier = Modifier.height(12.dp))
+                CampoEditable("Teléfono", editPhone, onPhoneChanged)
+                Spacer(modifier = Modifier.height(12.dp))
+                CampoEditable("Fecha de nacimiento", editBirthDate, onBirthDateChanged)
+
+                if (errorMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = errorMessage, color = Color.Red, fontSize = 13.sp)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
+                        Text("Cancelar")
+                    }
+                    Button(
+                        onClick = onSave, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    ) { Text("Guardar") }
+                }
+            } else {
+                CampoInformacion(etiqueta = "Nombre completo", valor = user.name)
+                Spacer(modifier = Modifier.height(16.dp))
+                CampoInformacion(etiqueta = "Correo electrónico", valor = user.email.ifBlank { "Sin datos" })
+                Spacer(modifier = Modifier.height(16.dp))
+                CampoInformacion(etiqueta = "Teléfono", valor = user.phone.ifBlank { "Sin datos" })
+                Spacer(modifier = Modifier.height(16.dp))
+                CampoInformacion(etiqueta = "Fecha de nacimiento", valor = user.birthDate.ifBlank { "Sin datos" })
+            }
         }
+    }
+}
+
+@Composable
+fun CampoEditable(etiqueta: String, valor: String, onValueChange: (String) -> Unit) {
+    Column {
+        Text(text = etiqueta, fontSize = 14.sp, color = Color.Gray)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = valor, onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(), singleLine = true,
+            shape = RoundedCornerShape(8.dp)
+        )
     }
 }
 
@@ -145,10 +216,8 @@ fun CampoInformacion(etiqueta: String, valor: String) {
         Text(text = etiqueta, fontSize = 14.sp, color = Color.Gray)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
-            value = valor,
-            onValueChange = { },
-            readOnly = true,
-            modifier = Modifier.fillMaxWidth(),
+            value = valor, onValueChange = { },
+            readOnly = true, modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.LightGray,
@@ -159,71 +228,12 @@ fun CampoInformacion(etiqueta: String, valor: String) {
 }
 
 @Composable
-fun DispositivosTabContent() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Dispositivos", fontWeight = FontWeight.Medium, fontSize = 18.sp)
-            Spacer(modifier = Modifier.height(16.dp))
-            DispositivoItem(
-                nombre = "Smartwatch XYZ",
-                estado = "Conectado",
-                ultimaSincronizacion = "Hoy, 10:30 AM"
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            DispositivoItem(
-                nombre = "Pulsera de actividad ABC",
-                estado = "Desconectado",
-                ultimaSincronizacion = "Ayer, 8:15 PM"
-            )
-        }
-    }
-}
-
-@Composable
-fun DispositivoItem(nombre: String, estado: String, ultimaSincronizacion: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-    ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF2196F3)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "⌚", color = Color.White, fontSize = 16.sp)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = nombre, fontWeight = FontWeight.Medium, fontSize = 16.sp)
-                Text(
-                    text = estado,
-                    fontSize = 14.sp,
-                    color = if (estado == "Conectado") Color(0xFF4CAF50) else Color.Gray
-                )
-                Text(
-                    text = "Última sincronización: $ultimaSincronizacion",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun AjustesTabContent(
     notificationsEnabled: Boolean,
     darkModeEnabled: Boolean,
     onNotificationsToggled: (Boolean) -> Unit,
-    onDarkModeToggled: (Boolean) -> Unit
+    onDarkModeToggled: (Boolean) -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -251,6 +261,17 @@ fun AjustesTabContent(
                 activado = darkModeEnabled,
                 onToggle = onDarkModeToggled
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onLogout,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935), contentColor = Color.White)
+            ) { Text("Cerrar sesión") }
         }
     }
 }
@@ -264,9 +285,7 @@ fun AjusteItem(
     onToggle: (Boolean) -> Unit = {}
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -275,13 +294,10 @@ fun AjusteItem(
         }
         if (esSwitch) {
             Switch(
-                checked = activado,
-                onCheckedChange = onToggle,
+                checked = activado, onCheckedChange = onToggle,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color(0xFF4CAF50),
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.LightGray
+                    checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF4CAF50),
+                    uncheckedThumbColor = Color.White, uncheckedTrackColor = Color.LightGray
                 )
             )
         } else {

@@ -1,60 +1,82 @@
 package com.jpalomino502.vivebien.feature.appointments.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.jpalomino502.vivebien.core.domain.model.Appointment
+import com.jpalomino502.vivebien.feature.appointments.domain.usecase.AddAppointmentUseCase
+import com.jpalomino502.vivebien.feature.appointments.domain.usecase.DeleteAppointmentUseCase
+import com.jpalomino502.vivebien.feature.appointments.domain.usecase.GetAppointmentsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AppointmentsUiState(
     val upcomingAppointments: List<Appointment> = emptyList(),
     val pastAppointments: List<Appointment> = emptyList(),
-    val isLoading: Boolean = false
+    val appointmentDays: Set<Int> = emptySet(),
+    val isLoading: Boolean = true,
+    val showAddDialog: Boolean = false,
+    val errorMessage: String = ""
 )
 
 @HiltViewModel
-class AppointmentsViewModel @Inject constructor() : ViewModel() {
+class AppointmentsViewModel @Inject constructor(
+    private val getAppointments: GetAppointmentsUseCase,
+    private val addAppointmentUseCase: AddAppointmentUseCase,
+    private val deleteAppointmentUseCase: DeleteAppointmentUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppointmentsUiState())
     val uiState: StateFlow<AppointmentsUiState> = _uiState.asStateFlow()
 
     init {
-        loadAppointments()
+        viewModelScope.launch {
+            combine(
+                getAppointments.upcoming(),
+                getAppointments.past()
+            ) { upcoming, past -> upcoming to past }
+            .collect { (upcoming, past) ->
+                val days = upcoming.map { appt ->
+                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = appt.dateTimestamp }
+                    val today = java.util.Calendar.getInstance()
+                    if (cal.get(java.util.Calendar.YEAR) == today.get(java.util.Calendar.YEAR) &&
+                        cal.get(java.util.Calendar.MONTH) == today.get(java.util.Calendar.MONTH)) {
+                        cal.get(java.util.Calendar.DAY_OF_MONTH)
+                    } else -1
+                }.filter { it > 0 }.toSet()
+
+                _uiState.value = _uiState.value.copy(
+                    upcomingAppointments = upcoming,
+                    pastAppointments = past,
+                    appointmentDays = days,
+                    isLoading = false
+                )
+            }
+        }
     }
 
-    private fun loadAppointments() {
-        _uiState.value = AppointmentsUiState(
-            upcomingAppointments = listOf(
-                Appointment(
-                    id = 1,
-                    title = "Control Médico",
-                    doctorName = "Dr. Martínez",
-                    specialty = "Medicina General",
-                    dateTime = "15 de Abril, 10:00 AM",
-                    location = "Centro Médico ViveBien"
-                ),
-                Appointment(
-                    id = 2,
-                    title = "Consulta Virtual",
-                    doctorName = "Dra. López",
-                    specialty = "Nutrición",
-                    dateTime = "20 de Abril, 3:00 PM",
-                    isVirtual = true
-                )
-            ),
-            pastAppointments = listOf(
-                Appointment(
-                    id = 3,
-                    title = "Consulta Virtual",
-                    doctorName = "Dr. Ramírez",
-                    specialty = "Cardiología",
-                    dateTime = "10 de Marzo, 3:00 PM",
-                    isPast = true,
-                    isVirtual = true
-                )
+    fun onShowAddDialog() { _uiState.value = _uiState.value.copy(showAddDialog = true, errorMessage = "") }
+    fun onHideAddDialog() { _uiState.value = _uiState.value.copy(showAddDialog = false, errorMessage = "") }
+
+    fun onAddAppointment(
+        title: String, doctorName: String, specialty: String,
+        dateTimeDisplay: String, dateTimestamp: Long,
+        location: String, isVirtual: Boolean
+    ) {
+        viewModelScope.launch {
+            val result = addAppointmentUseCase(title, doctorName, specialty, dateTimeDisplay, dateTimestamp, location, isVirtual)
+            result.fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(showAddDialog = false, errorMessage = "") },
+                onFailure = { _uiState.value = _uiState.value.copy(errorMessage = it.message ?: "") }
             )
-        )
+        }
+    }
+
+    fun onDeleteAppointment(appointment: Appointment) {
+        viewModelScope.launch { deleteAppointmentUseCase(appointment) }
     }
 }

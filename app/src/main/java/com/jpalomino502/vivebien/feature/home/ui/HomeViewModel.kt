@@ -1,13 +1,13 @@
 package com.jpalomino502.vivebien.feature.home.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.jpalomino502.vivebien.feature.home.domain.usecase.GetDashboardUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -15,32 +15,32 @@ data class HomeUiState(
     val currentDate: String = "",
     val planProgress: Float = 0f,
     val planProgressPercent: Int = 0,
-    val nextAppointment: String = "",
-    val stepsToday: String = ""
+    val nextAppointment: String = "Sin citas próximas",
+    val stepsToday: String = "0 pasos",
+    val isLoading: Boolean = true
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val getDashboard: GetDashboardUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadDashboardData()
-    }
-
-    private fun loadDashboardData() {
-        val today = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale("es", "CO"))
-        val dateStr = today.format(formatter).replaceFirstChar { it.uppercase() }
-
-        _uiState.value = HomeUiState(
-            greeting = "Hola, María",
-            currentDate = dateStr,
-            planProgress = 0.68f,
-            planProgressPercent = 68,
-            nextAppointment = "15 Abr, 10:00 AM",
-            stepsToday = "8,542 pasos"
-        )
+        viewModelScope.launch {
+            getDashboard().collect { data ->
+                _uiState.value = HomeUiState(
+                    greeting = "Hola, ${data.displayName}",
+                    currentDate = data.currentDate,
+                    planProgress = data.planProgress,
+                    planProgressPercent = data.planProgressPercent,
+                    nextAppointment = data.nextAppointment,
+                    stepsToday = "%,d pasos".format(data.dailyStats.steps),
+                    isLoading = false
+                )
+            }
+        }
     }
 }

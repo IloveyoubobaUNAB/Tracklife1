@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class RegisterUiState(
+    val displayName: String = "",
     val username: String = "",
     val password: String = "",
     val confirmPassword: String = "",
@@ -27,33 +28,19 @@ class RegisterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun onUsernameChanged(value: String) {
-        _uiState.value = _uiState.value.copy(username = value, errorMessage = "")
-    }
-
-    fun onPasswordChanged(value: String) {
-        _uiState.value = _uiState.value.copy(password = value, errorMessage = "")
-    }
-
-    fun onConfirmPasswordChanged(value: String) {
-        _uiState.value = _uiState.value.copy(confirmPassword = value, errorMessage = "")
-    }
+    fun onDisplayNameChanged(value: String) { _uiState.value = _uiState.value.copy(displayName = value, errorMessage = "") }
+    fun onUsernameChanged(value: String) { _uiState.value = _uiState.value.copy(username = value, errorMessage = "") }
+    fun onPasswordChanged(value: String) { _uiState.value = _uiState.value.copy(password = value, errorMessage = "") }
+    fun onConfirmPasswordChanged(value: String) { _uiState.value = _uiState.value.copy(confirmPassword = value, errorMessage = "") }
 
     fun onRegisterClicked() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = "")
-            val state = _uiState.value
-            val result = registerUseCase(state.username, state.password, state.confirmPassword)
+            val s = _uiState.value
+            val result = registerUseCase(s.displayName, s.username, s.password, s.confirmPassword)
             result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, registerSuccess = true)
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = error.message ?: "Error desconocido"
-                    )
-                }
+                onSuccess = { _uiState.value = _uiState.value.copy(isLoading = false, registerSuccess = true) },
+                onFailure = { _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = it.message ?: "Error desconocido") }
             )
         }
     }

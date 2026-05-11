@@ -8,5 +8,6 @@ data class Appointment(
     val dateTime: String,
     val location: String = "",
     val isPast: Boolean = false,
-    val isVirtual: Boolean = false
+    val isVirtual: Boolean = false,
+    val dateTimestamp: Long = 0
 )

@@ -4,8 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,21 +25,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jpalomino502.vivebien.core.domain.model.Appointment
 import com.jpalomino502.vivebien.core.ui.components.CustomTabRow
 import com.jpalomino502.vivebien.feature.appointments.ui.AppointmentsViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun CitasScreen(viewModel: AppointmentsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
+    if (uiState.showAddDialog) {
+        AddCitaDialog(
+            onDismiss = viewModel::onHideAddDialog,
+            onConfirm = { title, doctor, specialty, display, timestamp, location, isVirtual ->
+                viewModel.onAddAppointment(title, doctor, specialty, display, timestamp, location, isVirtual)
+            },
+            errorMessage = uiState.errorMessage
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F8F8))) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -43,29 +51,18 @@ fun CitasScreen(viewModel: AppointmentsViewModel = hiltViewModel()) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFF4CAF50))
-                            .padding(4.dp),
+                        modifier = Modifier.size(24.dp).clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF4CAF50)).padding(4.dp),
                         contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "📅", color = Color.White, fontSize = 12.sp)
-                    }
+                    ) { Text(text = "📅", color = Color.White, fontSize = 12.sp) }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Citas",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Citas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
                 Button(
-                    onClick = { },
+                    onClick = viewModel::onShowAddDialog,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                     shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("+ Nueva Cita")
-                }
+                ) { Text("+ Nueva Cita") }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -74,13 +71,12 @@ fun CitasScreen(viewModel: AppointmentsViewModel = hiltViewModel()) {
                 text = java.time.YearMonth.now().format(
                     java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale("es"))
                 ).replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            CalendarioMes()
+            CalendarioMes(appointmentDays = uiState.appointmentDays)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -94,25 +90,48 @@ fun CitasScreen(viewModel: AppointmentsViewModel = hiltViewModel()) {
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTab) {
-                0 -> CitasContent(appointments = uiState.upcomingAppointments)
-                1 -> CitasContent(appointments = uiState.pastAppointments)
+                0 -> CitasContent(
+                    appointments = uiState.upcomingAppointments,
+                    isLoading = uiState.isLoading,
+                    emptyMessage = "No hay citas próximas.",
+                    onDelete = viewModel::onDeleteAppointment
+                )
+                1 -> CitasContent(
+                    appointments = uiState.pastAppointments,
+                    isLoading = uiState.isLoading,
+                    emptyMessage = "No hay citas pasadas.",
+                    onDelete = viewModel::onDeleteAppointment
+                )
             }
         }
     }
 }
 
 @Composable
-fun CitasContent(appointments: List<Appointment>) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        appointments.forEachIndexed { index, appointment ->
-            if (index > 0) Spacer(modifier = Modifier.height(16.dp))
-            CitaCard(appointment = appointment)
+fun CitasContent(
+    appointments: List<Appointment>,
+    isLoading: Boolean,
+    emptyMessage: String,
+    onDelete: (Appointment) -> Unit
+) {
+    when {
+        isLoading -> Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color(0xFF4CAF50))
+        }
+        appointments.isEmpty() -> Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+            Text(emptyMessage, color = Color.Gray, fontSize = 14.sp)
+        }
+        else -> Column(modifier = Modifier.fillMaxWidth()) {
+            appointments.forEachIndexed { index, appointment ->
+                if (index > 0) Spacer(modifier = Modifier.height(16.dp))
+                CitaCard(appointment = appointment, onDelete = onDelete)
+            }
         }
     }
 }
 
 @Composable
-fun CitaCard(appointment: Appointment) {
+fun CitaCard(appointment: Appointment, onDelete: (Appointment) -> Unit = {}) {
     val accentColor = when {
         appointment.isPast -> Color(0xFF9E9E9E)
         appointment.isVirtual -> Color(0xFF9C27B0)
@@ -127,28 +146,17 @@ fun CitaCard(appointment: Appointment) {
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(accentColor),
+                modifier = Modifier.size(48.dp).clip(CircleShape).background(accentColor),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (appointment.isVirtual) "📱" else "📅",
-                    color = Color.White,
-                    fontSize = 20.sp
-                )
+                Text(text = if (appointment.isVirtual) "📱" else "📅", color = Color.White, fontSize = 20.sp)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = appointment.title, fontWeight = FontWeight.Medium, fontSize = 16.sp)
-                Text(
-                    text = "${appointment.doctorName} - ${appointment.specialty}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                Text(text = "${appointment.doctorName} - ${appointment.specialty}", fontSize = 14.sp, color = Color.Gray)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = "⏱ ${appointment.dateTime}", fontSize = 14.sp, color = Color.Gray)
                 if (appointment.location.isNotBlank()) {
@@ -156,25 +164,15 @@ fun CitaCard(appointment: Appointment) {
                 }
             }
 
-            if (!appointment.isPast) {
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = accentColor
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Reprogramar")
-                }
+            TextButton(onClick = { onDelete(appointment) }) {
+                Text("✕", color = Color.Gray, fontSize = 16.sp)
             }
         }
     }
 }
 
 @Composable
-fun CalendarioMes() {
+fun CalendarioMes(appointmentDays: Set<Int> = emptySet()) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -186,40 +184,21 @@ fun CalendarioMes() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "< ",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
-                    modifier = Modifier.clickable { }
-                )
+                Text("< ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Gray, modifier = Modifier.clickable { })
                 Text(
                     text = java.time.YearMonth.now().format(
                         java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale("es"))
                     ).replaceFirstChar { it.uppercase() },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontSize = 16.sp, fontWeight = FontWeight.Medium
                 )
-                Text(
-                    text = " >",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray,
-                    modifier = Modifier.clickable { }
-                )
+                Text(" >", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Gray, modifier = Modifier.clickable { })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa").forEach { dia ->
-                    Text(
-                        text = dia,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+                listOf("Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa").forEach { dia ->
+                    Text(text = dia, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, fontSize = 14.sp, color = Color.Gray)
                 }
             }
 
@@ -243,7 +222,8 @@ fun CalendarioMes() {
                         DiaCalendario(
                             dia = if (day > 0) day else 0,
                             estaSeleccionado = day == today.dayOfMonth,
-                            esDelMesActual = day > 0
+                            esDelMesActual = day > 0,
+                            tieneEvento = day > 0 && appointmentDays.contains(day)
                         )
                     }
                 }
@@ -277,8 +257,7 @@ fun DiaCalendario(dia: Int, estaSeleccionado: Boolean, esDelMesActual: Boolean, 
     ) {
         if (dia > 0) {
             Text(
-                text = dia.toString(),
-                fontSize = 14.sp,
+                text = dia.toString(), fontSize = 14.sp,
                 fontWeight = if (estaSeleccionado || tieneEvento) FontWeight.Medium else FontWeight.Normal,
                 color = when {
                     estaSeleccionado -> Color.White
@@ -289,4 +268,70 @@ fun DiaCalendario(dia: Int, estaSeleccionado: Boolean, esDelMesActual: Boolean, 
             )
         }
     }
+}
+
+@Composable
+private fun AddCitaDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String, String, Long, String, Boolean) -> Unit,
+    errorMessage: String
+) {
+    var title by remember { mutableStateOf("") }
+    var doctor by remember { mutableStateOf("") }
+    var specialty by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf("") }
+    var time by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var isVirtual by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nueva Cita") },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(value = title, onValueChange = { title = it },
+                    label = { Text("Título *") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = doctor, onValueChange = { doctor = it },
+                    label = { Text("Médico *") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = specialty, onValueChange = { specialty = it },
+                    label = { Text("Especialidad") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = date, onValueChange = { date = it },
+                    label = { Text("Fecha (dd/MM/yyyy) *") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = time, onValueChange = { time = it },
+                    label = { Text("Hora (HH:mm) *") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = location, onValueChange = { location = it },
+                    label = { Text("Lugar (opcional)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = isVirtual, onCheckedChange = { isVirtual = it },
+                        colors = CheckboxDefaults.colors(checkedColor = Color(0xFF4CAF50)))
+                    Text("Cita virtual", fontSize = 14.sp)
+                }
+                if (errorMessage.isNotEmpty()) {
+                    Text(text = errorMessage, color = Color.Red, fontSize = 13.sp)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val timestamp = parseTimestamp("$date $time")
+                val displayDate = "$date, $time"
+                onConfirm(title, doctor, specialty, displayDate, timestamp, location, isVirtual)
+            }) { Text("Guardar", color = Color(0xFF4CAF50)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+private fun parseTimestamp(dateTimeStr: String): Long {
+    return try {
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("es"))
+        sdf.parse(dateTimeStr.trim())?.time ?: 0L
+    } catch (e: Exception) { 0L }
 }

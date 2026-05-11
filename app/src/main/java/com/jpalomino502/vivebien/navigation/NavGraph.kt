@@ -22,7 +22,7 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             RegisterScreen(navController = navController)
         }
         composable(route = Screen.Main.route) {
-            MainScreen()
+            MainScreen(rootNavController = navController)
         }
     }
 }
